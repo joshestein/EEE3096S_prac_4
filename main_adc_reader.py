@@ -33,7 +33,7 @@ def convert_temp(data):
 
 def readPot():
     val = mcp.read_adc(pot_adc)
-    return (val/1024)*3.3
+    return (val/float(1023))*3.3
 
 while True:
     #temp_level = mcp.read_adc(temp_sensor_channel)
