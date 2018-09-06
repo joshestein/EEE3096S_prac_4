@@ -14,6 +14,7 @@ SPICS = 8
 
 LDR_channel = 7
 temp_sensor_channel = 0
+pot_adc = 5
 
 GPIO.setup(SPIMOSI, GPIO.OUT)
 GPIO.setup(SPIMISO, GPIO.IN)
