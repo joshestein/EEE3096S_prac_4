@@ -22,12 +22,17 @@ GPIO.setup(SPICS, GPIO.OUT)
 
 mcp = Adafruit_MCP3008.MCP3008(clk=SPICLK, cs=SPICS, mosi=SPIMOSI, miso=SPIMISO)
 
+
 def convert_voltage(data):
     #ldr needs to be proportioned to flashlight
     return (data*3.3)/float(1023)
     
 def convert_temp(data):
     temp = ((data*330)/float(1023))-5
+
+def readPot():
+    val = mcp.read_adc(pot_adc)
+    return (val/1024)*3.3
 
 while True:
     #temp_level = mcp.read_adc(temp_sensor_channel)
