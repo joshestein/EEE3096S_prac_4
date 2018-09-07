@@ -29,7 +29,7 @@ def callback_reset(channel):
     #clear screen
     if os.name == 'nt':
         #windows
-        os.system('clear')
+        os.system('cls')
     else:
         os.system('clear')
 
