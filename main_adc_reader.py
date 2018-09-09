@@ -13,16 +13,20 @@ SPIMOSI = 10
 SPICS = 8
 
 reset_btn = 16
+frequency_btn = 26
 
 LDR_channel = 7
 temp_sensor_channel = 0
 pot_adc = 5
+
+frequency = 0.5
 
 GPIO.setup(SPIMOSI, GPIO.OUT)
 GPIO.setup(SPIMISO, GPIO.IN)
 GPIO.setup(SPICLK, GPIO.OUT)
 GPIO.setup(SPICS, GPIO.OUT)
 GPIO.setup(reset_btn, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(frequency_btn, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #callbacks
 def callback_reset(channel):
@@ -35,12 +39,21 @@ def callback_reset(channel):
 
     #TODO: reset timer (once timer function has been created)
 
+def callback_frequency_change(channel):
+    #need global to tell python about global var
+    global frequency
+    if frequency == 0.5:
+        frequency = 1
+    elif frequency == 1:
+        frequency = 2
+    else:
+        frequency = 0.5
+
 #interrupts
 GPIO.add_event_detect(reset_btn, GPIO.FALLING, callback=callback_reset, bouncetime=200)
+GPIO.add_event_detect(frequency_btn, GPIO.FALLING, callback=callback_frequency_change, bouncetime=200)
 
 mcp = Adafruit_MCP3008.MCP3008(clk=SPICLK, cs=SPICS, mosi=SPIMOSI, miso=SPIMISO)
-
-    
 
 def convert_voltage(data):
     #ldr needs to be proportioned to flashlight
@@ -73,5 +86,5 @@ while True:
     print("{}, {} V, {} C".format(temp_level, temp_voltage, temp))
     #print("{} V, {}%".format(ldr_voltage, ldr_percentage))
 
-    time.sleep(0.5)
+    time.sleep(frequency)
 
