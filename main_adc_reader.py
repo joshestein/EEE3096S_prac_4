@@ -20,6 +20,7 @@ temp_sensor_channel = 0
 pot_adc = 5
 
 frequency = 0.5
+state = off
 
 GPIO.setup(SPIMOSI, GPIO.OUT)
 GPIO.setup(SPIMISO, GPIO.IN)
@@ -27,6 +28,7 @@ GPIO.setup(SPICLK, GPIO.OUT)
 GPIO.setup(SPICS, GPIO.OUT)
 GPIO.setup(reset_btn, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.setup(frequency_btn, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(stop_btn, GPIO.IN, pull_up_down = GPIO.PUD.UP)
 
 #callbacks
 def callback_reset(channel):
@@ -49,9 +51,16 @@ def callback_frequency_change(channel):
     else:
         frequency = 0.5
 
+def callback_stop():
+    if state == on:
+        state == off
+    else:
+        state == on       
+
 #interrupts
 GPIO.add_event_detect(reset_btn, GPIO.FALLING, callback=callback_reset, bouncetime=200)
 GPIO.add_event_detect(frequency_btn, GPIO.FALLING, callback=callback_frequency_change, bouncetime=200)
+GPIO.add_event_detect(stop_btn, GPIO.FALLING, callback=callback_stop, bouncetime = 200)
 
 mcp = Adafruit_MCP3008.MCP3008(clk=SPICLK, cs=SPICS, mosi=SPIMOSI, miso=SPIMISO)
 
@@ -74,7 +83,7 @@ def readPot():
     val = mcp.read_adc(pot_adc)
     return (val/1024)*3.3
 
-while True:
+while state == on:
     temp_level = mcp.read_adc(temp_sensor_channel)
     temp_voltage = convert_voltage(temp_level)
     temp = get_temp_in_degrees(temp_voltage)
