@@ -38,8 +38,9 @@ GPIO.setup(stop_btn, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
 #callbacks
 def callback_reset(channel):
-    global prevTime
+    global prevTime, readings
     prevTime = datetime.datetime(100,1,1,0,0,0)
+    readings = []
     #clear screen
     if os.name == 'nt':
         #windows
@@ -62,16 +63,17 @@ def callback_frequency_change(channel):
 def callback_display(channel):
     global readings
     for i in readings:
-	print(" {} {} {} V {} C {}%".format(i[0], i[1], i[2], i[3], i[4]))
-    print("-----------------------------------------------")
+        print("{:10} | {} | {:10}V | {:10}C | {:10}%".format(i[0], i[1], i[2], i[3], i[4]))
+    print("---------------------------------------------------------------------")
 
 def callback_stop(channel):
     global monitor, readings
     if monitor == True:
 	monitor = False
-	readings = [] #reset saved reading array
     else:
 	monitor = True
+        print("{:10} | {:8} | {:12} | {:10} | {:10}".format("Time", "Timer", "Pot", "Temp", "Light"))
+	readings = []
 
 #interrupts
 GPIO.add_event_detect(reset_btn, GPIO.FALLING, callback=callback_reset, bouncetime=200)
@@ -87,7 +89,7 @@ def timer():
     if frequency == 0.5:
 	newTime = prevTime + datetime.timedelta(0,5)
     elif frequency == 1:
-	newTime = newTime = prevTime + datetime.timedelta(0,10)
+	newTime = prevTime + datetime.timedelta(0,10)
     else:
 	newTime = prevTime + datetime.timedelta(0,20)
     prevTime = newTime
@@ -98,7 +100,8 @@ def convert_voltage(data):
     return round((data*3.3)/float(1023), 2)
     
 def get_temp_in_degrees(temp_voltage):
-    return (temp_voltage-500)/10
+    temp = (temp_voltage-0.5)*100
+    return round(temp,2)
 
 def get_ldr_percentage(ldr_voltage):
     #2.3 because there is a 1V drop across current limiting resistor
@@ -115,6 +118,7 @@ def get_pot_adjVoltage(pot_voltage):
     else:
    	return voltage
 
+print("{:10} | {:8} | {:12} | {:10} | {:10}".format("Time", "Timer", "Pot", "Temp", "Light"))
 while True:
 
 	if monitor == True:
@@ -135,11 +139,12 @@ while True:
 		#print("{} V".format(pot_adjVoltage))
 
 		currentTime = time.strftime("%H:%M:%S")
-		print("{} {} {} V {} C {}%".format(currentTime, timer(), pot_adjVoltage, temp, ldr_percentage))
-		print("-----------------------------------------------")
+                timer_now = timer()
+                print("{:10} | {} | {:10}V | {:10}C | {:10}%".format(currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage))
+		print("----------------------------------------------------------------------")
 
 		if len(readings) < 5:
-			newReadings = [currentTime, timer(), pot_adjVoltage, ldr_percentage, temp]
+			newReadings = [currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage]
 			readings.extend([newReadings])
 
 		time.sleep(frequency)
