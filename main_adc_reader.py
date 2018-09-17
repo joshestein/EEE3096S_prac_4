@@ -144,5 +144,5 @@ while True:
             newReadings = [currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage]
             readings.extend([newReadings])
 
-        time.sleep(frequency)
+    time.sleep(frequency)
 
