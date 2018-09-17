@@ -25,6 +25,7 @@ pot_channel = 5
 frequency = 0.5
 monitor = True
 readings = []
+#dummy date
 prevTime = datetime.datetime(100,1,1,0,0,0)
 
 GPIO.setup(SPIMOSI, GPIO.OUT)
@@ -49,7 +50,6 @@ def callback_reset(channel):
         os.system('clear')
 
 def callback_frequency_change(channel):
-    #need global to tell python about global var
     global frequency
     if frequency == 0.5:
         frequency = 1
@@ -67,11 +67,11 @@ def callback_display(channel):
 def callback_stop(channel):
     global monitor, readings
     if monitor == True:
-	monitor = False
+        monitor = False
     else:
-	monitor = True
+        monitor = True
         print("{:10} | {:8} | {:12} | {:10} | {:10}".format("Time", "Timer", "Pot", "Temp", "Light"))
-	readings = []
+        readings = []
 
 #interrupts
 GPIO.add_event_detect(reset_btn, GPIO.FALLING, callback=callback_reset, bouncetime=200)
@@ -85,11 +85,11 @@ def timer():
     global prevTime
     display = prevTime
     if frequency == 0.5:
-	newTime = prevTime + datetime.timedelta(0,5)
+	    newTime = prevTime + datetime.timedelta(0,5)
     elif frequency == 1:
-	newTime = prevTime + datetime.timedelta(0,10)
+	    newTime = prevTime + datetime.timedelta(0,10)
     else:
-	newTime = prevTime + datetime.timedelta(0,20)
+	    newTime = prevTime + datetime.timedelta(0,20)
     prevTime = newTime
     return display.time()
 
@@ -112,38 +112,37 @@ def get_ldr_percentage(ldr_voltage):
 def get_pot_adjVoltage(pot_voltage):
     voltage = round(((pot_voltage-0.02)*3.3)/2.93, 2)
     if voltage > 3.3:
-	return 3.3
+        return 3.3
     else:
-   	return voltage
+        return voltage
 
 print("{:10} | {:8} | {:12} | {:10} | {:10}".format("Time", "Timer", "Pot", "Temp", "Light"))
 while True:
+    if monitor == True:
+        temp_level = mcp.read_adc(temp_sensor_channel)
+        temp_voltage = convert_voltage(temp_level)
+        temp = get_temp_in_degrees(temp_voltage)
 
-	if monitor == True:
-		temp_level = mcp.read_adc(temp_sensor_channel)
-		temp_voltage = convert_voltage(temp_level)
-		temp = get_temp_in_degrees(temp_voltage)
+        ldr_level = mcp.read_adc(LDR_channel)
+        ldr_voltage = convert_voltage(ldr_level)
+        ldr_percentage = get_ldr_percentage(ldr_voltage)
 
-		ldr_level = mcp.read_adc(LDR_channel)
-		ldr_voltage = convert_voltage(ldr_level)
-		ldr_percentage = get_ldr_percentage(ldr_voltage)
+        pot_level = mcp.read_adc(pot_channel)
+        pot_voltage = convert_voltage(pot_level)
+        pot_adjVoltage = get_pot_adjVoltage(pot_voltage)
 
-		pot_level = mcp.read_adc(pot_channel)
-		pot_voltage = convert_voltage(pot_level)
-		pot_adjVoltage = get_pot_adjVoltage(pot_voltage)
+        #print("{}, {} V, {} C".format(temp_level, temp_voltage, temp))
+        #print("{} V, {}%".format(ldr_voltage, ldr_percentage))
+        #print("{} V".format(pot_adjVoltage))
 
-		#print("{}, {} V, {} C".format(temp_level, temp_voltage, temp))
-		#print("{} V, {}%".format(ldr_voltage, ldr_percentage))
-		#print("{} V".format(pot_adjVoltage))
+        currentTime = time.strftime("%H:%M:%S")
+        timer_now = timer()
+        print("{:10} | {} | {:10}V | {:10}C | {:10}%".format(currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage))
+        print("----------------------------------------------------------------------")
 
-		currentTime = time.strftime("%H:%M:%S")
-                timer_now = timer()
-                print("{:10} | {} | {:10}V | {:10}C | {:10}%".format(currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage))
-		print("----------------------------------------------------------------------")
+        if len(readings) < 5:
+            newReadings = [currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage]
+            readings.extend([newReadings])
 
-		if len(readings) < 5:
-			newReadings = [currentTime, timer_now, pot_adjVoltage, temp, ldr_percentage]
-			readings.extend([newReadings])
-
-		time.sleep(frequency)
+        time.sleep(frequency)
 
