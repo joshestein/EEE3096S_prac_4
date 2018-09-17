@@ -47,8 +47,6 @@ def callback_reset(channel):
         os.system('cls')
     else:
         os.system('clear')
-    
-    #TODO: reset timer (once timer function has been created)
 
 def callback_frequency_change(channel):
     #need global to tell python about global var
@@ -100,7 +98,7 @@ def convert_voltage(data):
     return round((data*3.3)/float(1023), 2)
     
 def get_temp_in_degrees(temp_voltage):
-    temp = (temp_voltage-0.5)*100
+    temp = (temp_voltage+2.85-0.5)*10
     return round(temp,2)
 
 def get_ldr_percentage(ldr_voltage):
